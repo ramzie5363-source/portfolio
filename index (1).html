@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramzie Rosli — Conservation Data Analyst &amp; GIS Specialist</title>
+<meta name="description" content="Portfolio of Ramzie Rosli — Conservation Data Analyst, GIS &amp; Spatial Monitoring Specialist, Kuala Lumpur, Malaysia.">
+<link rel="icon" href="data:,">
+
+<!-- ============================================================
+     FONTS
+     Space Grotesk  -> headings (technical, geometric character)
+     Inter           -> body copy (clean, highly legible)
+     JetBrains Mono  -> coordinates, tags, data labels (map/data feel)
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+/* ==================================================================
+   1. DESIGN TOKENS
+   Edit these variables to re-theme the entire site from one place.
+   ================================================================== */
+:root{
+  /* -- surfaces (deep "night map" navy, not pure black) -- */
+  --bg:            #0B0E14;
+  --bg-elevated:   #10141D;
+  --bg-panel:      #141926;
+  --line:          #232A3A;      /* hairline borders / graticule */
+  --line-soft:     #1A2030;
+
+  /* -- text -- */
+  --ink:           #E7EAF0;
+  --ink-dim:       #9AA3B5;
+  --ink-faint:     #616B80;
+
+  /* -- accents, drawn from topographic-map convention:
+        teal  = contour / water lines
+        amber = elevation / highlighted data -- */
+  --accent:        #5EEAD4;
+  --accent-dim:    #3AA391;
+  --accent2:       #F5A623;
+
+  /* -- type scale -- */
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --max-w: 1120px;
+}
+
+/* ==================================================================
+   2. RESET & BASE
+   ================================================================== */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+html{ scroll-behavior:smooth; }
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  *,*::before,*::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
+
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+
+  /* faint lat/long graticule texture across the whole page */
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: -1px -1px;
+}
+
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+ul{ list-style:none; }
+button{ font-family:inherit; cursor:pointer; }
+
+::selection{ background:var(--accent); color:var(--bg); }
+
+:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:3px;
+}
+
+.wrap{
+  max-width:var(--max-w);
+  margin:0 auto;
+  padding:0 28px;
+}
+
+.eyebrow-mono{
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--accent);
+  letter-spacing:0.02em;
+}
+
+section{ padding:120px 0; border-bottom:1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+
+h1,h2,h3{ font-family:var(--font-head); font-weight:600; line-height:1.15; }
+
+.section-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:56px;
+  flex-wrap:wrap;
+}
+
+.section-head h2{ font-size:clamp(1.6rem, 3vw, 2.1rem); }
+
+.section-head .index-tag{
+  font-family:var(--font-mono);
+  font-size:0.8rem;
+  color:var(--ink-faint);
+  border:1px solid var(--line);
+  padding:5px 10px;
+  white-space:nowrap;
+}
+
+/* ==================================================================
+   3. NAVIGATION
+   Fixed top bar. Right side shows a decorative live coordinate
+   readout on desktop (ties to the GIS theme), collapses to a
+   simple hamburger menu on small screens.
+   ================================================================== */
+.nav{
+  position:fixed;
+  top:0; left:0; right:0;
+  z-index:100;
+  border-bottom:1px solid transparent;
+  transition:background-color .25s ease, border-color .25s ease;
+}
+.nav.is-scrolled{
+  background:rgba(11,14,20,0.88);
+  backdrop-filter:blur(10px);
+  border-bottom-color:var(--line);
+}
+
+.nav-inner{
+  max-width:var(--max-w);
+  margin:0 auto;
+  padding:18px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.nav-brand{
+  font-family:var(--font-head);
+  font-weight:600;
+  font-size:1.05rem;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.nav-brand .dot{
+  width:8px; height:8px;
+  background:var(--accent);
+  border-radius:50%;
+  box-shadow:0 0 0 3px rgba(94,234,212,0.15);
+}
+
+.nav-links{
+  display:flex;
+  gap:32px;
+  font-size:0.92rem;
+  color:var(--ink-dim);
+}
+.nav-links a{ position:relative; padding:4px 0; transition:color .2s ease; }
+.nav-links a:hover{ color:var(--ink); }
+.nav-links a::after{
+  content:"";
+  position:absolute; left:0; right:100%; bottom:0;
+  height:1px; background:var(--accent);
+  transition:right .25s ease;
+}
+.nav-links a:hover::after{ right:0; }
+
+.nav-coord{
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--ink-faint);
+}
+
+.nav-toggle{
+  display:none;
+  flex-direction:column;
+  gap:5px;
+  background:none;
+  border:none;
+  padding:6px;
+}
+.nav-toggle span{ width:22px; height:2px; background:var(--ink); display:block; }
+
+.nav-mobile{
+  display:none;
+  flex-direction:column;
+  background:var(--bg-elevated);
+  border-bottom:1px solid var(--line);
+  padding:8px 28px 20px;
+}
+.nav-mobile a{
+  padding:12px 0;
+  border-bottom:1px solid var(--line-soft);
+  color:var(--ink-dim);
+  font-size:0.95rem;
+}
+.nav-mobile.is-open{ display:flex; }
+
+@media (max-width:760px){
+  .nav-links, .nav-coord{ display:none; }
+  .nav-toggle{ display:flex; }
+}
+
+/* ==================================================================
+   4. HERO
+   ================================================================== */
+.hero{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  padding-top:100px;
+  border-bottom:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+}
+
+/* subtle contour-line svg sitting behind the hero content */
+.hero-contours{
+  position:absolute;
+  top:-10%; right:-15%;
+  width:70%;
+  height:120%;
+  opacity:0.35;
+  pointer-events:none;
+}
+
+.hero-grid{
+  display:grid;
+  grid-template-columns: minmax(0,1fr) 300px;
+  gap:60px;
+  align-items:end;
+  width:100%;
+}
+
+.hero-locator{
+  font-family:var(--font-mono);
+  font-size:0.85rem;
+  color:var(--accent);
+  margin-bottom:22px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.hero-locator .bar{ width:26px; height:1px; background:var(--accent); display:inline-block; }
+
+.hero h1{
+  font-size:clamp(2.4rem, 6vw, 4.2rem);
+  max-width:14ch;
+  color:var(--ink);
+}
+
+.hero .role{
+  font-family:var(--font-mono);
+  color:var(--accent2);
+  font-size:clamp(1rem, 1.6vw, 1.2rem);
+  margin-top:20px;
+}
+
+.hero p.tagline{
+  color:var(--ink-dim);
+  max-width:52ch;
+  margin-top:20px;
+  font-size:1.05rem;
+}
+
+.hero-ctas{
+  display:flex;
+  gap:16px;
+  margin-top:40px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  font-family:var(--font-body);
+  font-weight:500;
+  font-size:0.95rem;
+  padding:14px 26px;
+  border:1px solid var(--line);
+  transition:border-color .2s ease, background-color .2s ease, color .2s ease;
+  display:inline-block;
+}
+.btn-primary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#06110F;
+}
+.btn-primary:hover{ background:transparent; color:var(--accent); }
+
+.btn-ghost{ color:var(--ink); }
+.btn-ghost:hover{ border-color:var(--accent); color:var(--accent); }
+
+/* small "legend" card sitting beside the hero headline on desktop */
+.hero-panel{
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+  padding:20px;
+  font-family:var(--font-mono);
+  font-size:0.8rem;
+  color:var(--ink-dim);
+}
+.hero-panel .row{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.hero-panel .row:last-child{ border-bottom:none; }
+.hero-panel .row span:last-child{ color:var(--ink); }
+
+@media (max-width:860px){
+  .hero-grid{ grid-template-columns:1fr; }
+  .hero-panel{ display:none; }
+}
+
+/* one deliberate load-in sequence for the hero — not repeated elsewhere */
+.reveal{
+  opacity:0;
+  transform:translateY(14px);
+  animation:reveal .7s ease forwards;
+}
+.reveal.d1{ animation-delay:.05s; }
+.reveal.d2{ animation-delay:.18s; }
+.reveal.d3{ animation-delay:.30s; }
+.reveal.d4{ animation-delay:.42s; }
+.reveal.d5{ animation-delay:.54s; }
+@keyframes reveal{ to{ opacity:1; transform:translateY(0); } }
+
+/* ==================================================================
+   5. ABOUT
+   Bio on the left, a cartographic "legend" of skills on the right.
+   ================================================================== */
+.about-grid{
+  display:grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap:80px;
+}
+
+.about-bio p{ color:var(--ink-dim); margin-bottom:18px; max-width:60ch; }
+.about-bio p:first-child{ color:var(--ink); font-size:1.1rem; }
+
+.legend{
+  border:1px solid var(--line);
+  background:var(--bg-panel);
+}
+.legend-title{
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--ink-faint);
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+}
+.legend-group{ padding:18px; border-bottom:1px solid var(--line-soft); }
+.legend-group:last-child{ border-bottom:none; }
+.legend-group h4{
+  font-family:var(--font-body);
+  font-size:0.85rem;
+  color:var(--ink-dim);
+  font-weight:600;
+  margin-bottom:12px;
+}
+.legend-items{ display:flex; flex-wrap:wrap; gap:8px; }
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--ink);
+  border:1px solid var(--line);
+  padding:6px 10px;
+}
+.legend-item .swatch{
+  width:8px; height:8px;
+  background:var(--accent);
+  flex-shrink:0;
+}
+.legend-group:nth-child(3) .swatch{ background:var(--accent2); border-radius:50%; }
+.legend-group:nth-child(4) .swatch{ background:var(--ink-faint); }
+
+@media (max-width:860px){
+  .about-grid{ grid-template-columns:1fr; gap:48px; }
+}
+
+/* ==================================================================
+   6. PROJECTS
+   ================================================================== */
+.projects-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+}
+
+.project-card{
+  background:var(--bg);
+  padding:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.project-thumb{
+  aspect-ratio:16/9;
+  position:relative;
+  background:
+    repeating-linear-gradient(45deg, var(--bg-panel) 0 10px, var(--bg-elevated) 10px 20px);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-start;
+  padding:14px;
+}
+/* Replace this block's background with a real screenshot: e.g.
+   .project-thumb.p1 { background-image:url('images/project-1.jpg'); background-size:cover; } */
+.project-thumb .dataset-id{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  color:var(--ink-dim);
+  background:rgba(11,14,20,0.75);
+  padding:3px 8px;
+  border:1px solid var(--line);
+}
+
+.project-body{ padding:22px; display:flex; flex-direction:column; gap:12px; flex-grow:1; }
+
+.project-body h3{ font-size:1.15rem; }
+.project-body p{ color:var(--ink-dim); font-size:0.94rem; }
+
+.tech-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; }
+.tech-tags span{
+  font-family:var(--font-mono);
+  font-size:0.7rem;
+  color:var(--accent);
+  border:1px solid var(--accent-dim);
+  padding:3px 8px;
+}
+
+.project-links{ display:flex; gap:18px; margin-top:6px; font-size:0.85rem; }
+.project-links a{ color:var(--ink); border-bottom:1px solid var(--line); padding-bottom:2px; transition:border-color .2s ease, color .2s ease; }
+.project-links a:hover{ color:var(--accent); border-color:var(--accent); }
+
+@media (max-width:760px){
+  .projects-grid{ grid-template-columns:1fr; }
+}
+
+/* ==================================================================
+   7. SERVICES / EXPERIENCE
+   ================================================================== */
+.services-list{
+  border-top:1px solid var(--line);
+}
+.service-row{
+  display:grid;
+  grid-template-columns: 220px 1fr;
+  gap:32px;
+  padding:28px 0;
+  border-bottom:1px solid var(--line);
+  align-items:baseline;
+}
+.service-row h3{
+  font-size:1.05rem;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.service-row h3::before{
+  content:"";
+  width:9px; height:9px;
+  border:1px solid var(--accent);
+  flex-shrink:0;
+}
+.service-row p{ color:var(--ink-dim); max-width:62ch; }
+.service-row .role-meta{
+  font-family:var(--font-mono);
+  font-size:0.78rem;
+  color:var(--ink-faint);
+  display:block;
+  margin-top:4px;
+}
+.service-row ul{ margin-top:10px; }
+.service-row ul li{
+  color:var(--ink-dim);
+  font-size:0.94rem;
+  padding-left:16px;
+  position:relative;
+  margin-bottom:6px;
+  max-width:62ch;
+}
+.service-row ul li::before{
+  content:"—";
+  position:absolute; left:0; top:0;
+  color:var(--ink-faint);
+}
+
+@media (max-width:700px){
+  .service-row{ grid-template-columns:1fr; gap:10px; }
+}
+
+/* ==================================================================
+   8. CONTACT
+   ================================================================== */
+.contact-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:80px;
+}
+
+.contact-info p{ color:var(--ink-dim); max-width:44ch; margin-bottom:28px; }
+
+.contact-email{
+  font-family:var(--font-mono);
+  font-size:1.15rem;
+  color:var(--accent);
+  display:inline-block;
+  border-bottom:1px solid var(--accent-dim);
+  padding-bottom:4px;
+  margin-bottom:36px;
+}
+
+.social-list{ display:flex; flex-direction:column; gap:0; }
+.social-list a{
+  display:flex;
+  justify-content:space-between;
+  padding:14px 0;
+  border-bottom:1px solid var(--line);
+  color:var(--ink);
+  font-size:0.95rem;
+}
+.social-list a span.arrow{ color:var(--ink-faint); transition:transform .2s ease, color .2s ease; }
+.social-list a:hover span.arrow{ color:var(--accent); transform:translate(3px,-3px); }
+
+.form-field{ margin-bottom:20px; }
+.form-field label{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--ink-faint);
+  margin-bottom:8px;
+}
+.form-field input,
+.form-field textarea{
+  width:100%;
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:12px 14px;
+  font-family:var(--font-body);
+  font-size:0.95rem;
+  transition:border-color .2s ease;
+}
+.form-field input:focus,
+.form-field textarea:focus{ border-color:var(--accent); outline:none; }
+.form-field textarea{ resize:vertical; min-height:120px; }
+
+.form-note{ font-size:0.8rem; color:var(--ink-faint); margin-top:10px; }
+
+@media (max-width:860px){
+  .contact-grid{ grid-template-columns:1fr; gap:48px; }
+}
+
+/* ==================================================================
+   9. FOOTER
+   ================================================================== */
+footer{
+  padding:36px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  color:var(--ink-faint);
+}
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<nav class="nav" id="siteNav">
+  <div class="nav-inner">
+    <a href="#top" class="nav-brand"><span class="dot"></span>Ramzie Rosli</a>
+
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+
+    <!-- decorative coordinate readout — purely thematic, edit or remove freely -->
+    <span class="nav-coord" id="coordReadout">3.1390&#176; N, 101.6869&#176; E</span>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="nav-mobile" id="navMobile">
+    <a href="#about">About</a>
+    <a href="#projects">Projects</a>
+    <a href="#experience">Experience</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     1. HERO
+     EDIT: headline, role, tagline, CTA targets
+     ============================================================ -->
+<header class="hero" id="top">
+  <svg class="hero-contours" viewBox="0 0 600 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g fill="none" stroke="#5EEAD4" stroke-width="1">
+      <path d="M50,700 C150,600 120,500 220,460 C320,420 300,320 420,300 C500,285 520,200 480,100"/>
+      <path d="M10,650 C120,560 100,470 200,430 C300,390 280,300 400,270 C480,250 500,170 460,60" opacity="0.7"/>
+      <path d="M90,760 C190,650 160,540 260,500 C360,460 330,350 450,330 C530,315 550,230 500,140" opacity="0.5"/>
+    </g>
+    <g fill="none" stroke="#F5A623" stroke-width="1" opacity="0.5">
+      <path d="M-20,600 C90,520 70,430 170,395 C270,360 250,270 370,245"/>
+    </g>
+  </svg>
+
+  <div class="wrap hero-grid">
+    <div>
+      <div class="hero-locator reveal d1">
+        <span class="bar"></span>
+        TIGER LANDSCAPE OFFICER — GLOBAL WILDLIFE PROGRAM
+      </div>
+
+      <h1 class="reveal d2">
+        Turning field &amp; spatial data into decisions for wildlife conservation.
+      </h1>
+
+      <div class="role reveal d3">Conservation Data Analyst — GIS &amp; Spatial Monitoring Specialist</div>
+
+      <p class="tagline reveal d4">
+        I work with PERHILITAN and conservation partners across Peninsular Malaysia,
+        using SMART, QGIS, and Power BI to turn patrol and camera-trap data into
+        clear, actionable insight for Malayan tiger recovery.
+      </p>
+
+      <div class="hero-ctas reveal d5">
+        <a href="#projects" class="btn btn-primary">View My Work</a>
+        <a href="#contact" class="btn btn-ghost">Contact Me</a>
+      </div>
+    </div>
+
+    <!-- small "reading" panel — purely decorative, ties to the map theme -->
+    <div class="hero-panel reveal d5">
+      <div class="row"><span>role</span><span>Conservation / GIS</span></div>
+      <div class="row"><span>based in</span><span>Kuala Lumpur, MY</span></div>
+      <div class="row"><span>focus</span><span>Tiger landscapes</span></div>
+      <div class="row"><span>currently at</span><span>PERHILITAN / GWP</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================
+     2. ABOUT
+     EDIT: bio paragraphs and skills legend
+     ============================================================ -->
+<section id="about">
+  <div class="wrap about-grid">
+    <div class="about-bio">
+      <h2 style="margin-bottom:28px;">About</h2><img src="gambar ramzie.png" alt="Ramzie Rosli" style="width:140px; height:140px; object-fit:cover; border:1px solid var(--line); filter:grayscale(40%); margin-bottom:24px;">
+      <p>
+        I'm a Wildlife Conservation &amp; GIS Specialist based in Kuala Lumpur, Malaysia,
+        with a background in Forestry Science from Universiti Putra Malaysia. My work
+        sits at the intersection of field conservation and data analysis — turning
+        patrol records, camera-trap data, and spatial datasets into insight that
+        protects the Malayan tiger.
+      </p>
+      <p>
+        As Tiger Landscape Officer under the Global Wildlife Program, I work alongside
+        the Department of Wildlife and National Parks (PERHILITAN) to process and
+        validate spatial data using SMART (Spatial Monitoring and Reporting Tool)
+        across the Southern Zone, including the Endau-Rompin complex — integrating
+        datasets from PERHILITAN, State Parks, and partner NGOs into a unified
+        monitoring system.
+      </p>
+      <p>
+        Before this, I managed daily operations across 1,340 sq km of the Al-Sultan
+        Abdullah Royal Tiger Reserve for Pahang State Park Corporation, and worked as
+        a Wildlife Researcher with the Wildlife Conservation Society deploying camera
+        traps and building patrol databases. I also design and deliver GIS/SMART
+        training workshops for rangers and PERHILITAN staff.
+      </p>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">SKILLS &amp; TOOLS — LEGEND</div>
+
+      <div class="legend-group">
+        <h4>Data Analysis &amp; BI</h4>
+        <div class="legend-items">
+          <span class="legend-item"><span class="swatch"></span>Power BI (PL-300 Certified)</span>
+          <span class="legend-item"><span class="swatch"></span>Looker Studio</span>
+          <span class="legend-item"><span class="swatch"></span>Excel</span>
+        </div>
+      </div>
+
+      <div class="legend-group">
+        <h4>GIS &amp; Spatial Monitoring</h4>
+        <div class="legend-items">
+          <span class="legend-item"><span class="swatch"></span>QGIS</span>
+          <span class="legend-item"><span class="swatch"></span>SMART (Spatial Monitoring &amp; Reporting Tool)</span>
+        </div>
+      </div>
+
+      <div class="legend-group">
+        <h4>Field &amp; Conservation Research</h4>
+        <div class="legend-items">
+          <span class="legend-item"><span class="swatch"></span>Camera trap deployment</span>
+          <span class="legend-item"><span class="swatch"></span>Patrol &amp; threat monitoring</span>
+          <span class="legend-item"><span class="swatch"></span>Ranger training</span>
+        </div>
+      </div>
+
+      <div class="legend-group">
+        <h4>Automation &amp; Tooling</h4>
+        <div class="legend-items">
+          <span class="legend-item"><span class="swatch"></span>Google Apps Script</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     3. FEATURED PROJECTS
+     EDIT: swap thumbnails, titles, descriptions, tags and links.
+     To use a real image instead of the placeholder pattern, add a
+     style like: style="background-image:url('images/your-file.jpg'); background-size:cover;"
+     directly on the .project-thumb div.
+     ============================================================ -->
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Featured Projects</h2>
+      <span class="index-tag">4 CASE FILES SHOWN</span>
+    </div>
+
+    <div class="projects-grid">
+
+      <!-- Project 1 -->
+      <article class="project-card">
+        <div class="project-thumb">
+          <span class="dataset-id">SMART · DASHBOARD</span>
+        </div>
+        <div class="project-body">
+          <h3>SMART Audit Dashboard</h3>
+          <p>Designed and maintained a Power BI dashboard to monitor, visualize,
+             and resolve spatial data collection issues, ensuring high data
+             integrity across all PERHILITAN reporting regions.</p>
+          <div class="tech-tags">
+            <span>Power BI</span><span>SMART</span><span>Excel</span>
+          </div>
+          <div class="project-links">
+            <a href="#">Case Study</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project 2 -->
+      <article class="project-card">
+        <div class="project-thumb">
+          <span class="dataset-id">ENDAU-ROMPIN · GIS</span>
+        </div>
+        <div class="project-body">
+          <h3>Tiger Landscape Spatial Monitoring</h3>
+          <p>Processed and validated spatial and patrol data across the
+             Southern Zone, integrating datasets from PERHILITAN, State
+             Parks, and partner NGOs to inform evidence-based tiger
+             recovery strategy.</p>
+          <div class="tech-tags">
+            <span>QGIS</span><span>SMART</span><span>Spatial Analysis</span>
+          </div>
+          <div class="project-links">
+            <a href="#">Case Study</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project 3 -->
+      <article class="project-card">
+        <div class="project-thumb">
+          <span class="dataset-id">WCS · CAMERA TRAP</span>
+        </div>
+        <div class="project-body">
+          <h3>Camera Trap Network &amp; Database</h3>
+          <p>Deployed and managed camera traps across critical habitat zones
+             with WCS Malaysia, then populated and maintained the central
+             SMART database with field patrol and camera trap records.</p>
+          <div class="tech-tags">
+            <span>SMART</span><span>Camera Trap</span><span>Excel</span>
+          </div>
+          <div class="project-links">
+            <a href="#">Case Study</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- Project 4 -->
+      <article class="project-card">
+        <div class="project-thumb">
+          <span class="dataset-id">TRAINING · CAPACITY</span>
+        </div>
+        <div class="project-body">
+          <h3>GIS &amp; SMART Capacity Building</h3>
+          <p>Facilitated hands-on SMART and GIS training workshops for
+             PERHILITAN staff and local community rangers, improving field
+             data collection and analytical capabilities across the region.</p>
+          <div class="tech-tags">
+            <span>SMART</span><span>QGIS</span><span>Training</span>
+          </div>
+          <div class="project-links">
+            <a href="#">Case Study</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     4. SERVICES / EXPERIENCE
+     EDIT: swap in your real areas of expertise
+     ============================================================ -->
+<section id="experience">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Experience</h2>
+      <span class="index-tag">CAREER TIMELINE</span>
+    </div>
+
+    <div class="services-list">
+      <div class="service-row">
+        <h3>Tiger Landscape Officer
+          <span class="role-meta">Global Wildlife Program, with PERHILITAN — March 2025 – Present</span>
+        </h3>
+        <ul>
+          <li>Process and validate spatial data using SMART across Peninsular Malaysia, integrating datasets from PERHILITAN, State Parks, and partner NGOs into a unified monitoring system.</li>
+          <li>Design and maintain a SMART Audit Dashboard to monitor, visualize, and resolve data collection issues, ensuring high data integrity across all reporting regions.</li>
+          <li>Analyze spatial and patrol data to deliver actionable insights that inform operational strategy and decision-making for PERHILITAN leadership.</li>
+          <li>Facilitate hands-on SMART and GIS training workshops for PERHILITAN staff and local community rangers.</li>
+        </ul>
+      </div>
+
+      <div class="service-row">
+        <h3>Operations Executive
+          <span class="role-meta">Perbadanan Taman Negeri Pahang — December 2023 – February 2025</span>
+        </h3>
+        <ul>
+          <li>Oversaw operational management of the 1,340 sq km Al-Sultan Abdullah Royal Tiger Reserve.</li>
+          <li>Coordinated multi-stakeholder collaboration between government agencies, local communities, and conservation NGOs including Panthera and The Habitat Foundation.</li>
+          <li>Led ranger post construction and strategic signage installation across the reserve.</li>
+          <li>Assisted law enforcement in anti-poaching operations and apprehending illegal entries.</li>
+        </ul>
+      </div>
+
+      <div class="service-row">
+        <h3>Wildlife Researcher
+          <span class="role-meta">WCS Malaysia — October 2022 – November 2023</span>
+        </h3>
+        <ul>
+          <li>Deployed and managed camera traps across critical habitat zones for surveillance and wildlife monitoring.</li>
+          <li>Developed monthly patrol schedules and operational flight plans for forest ranger teams.</li>
+          <li>Populated and maintained central databases and the SMART platform with field patrol and camera trap data.</li>
+          <li>Delivered training sessions on field data collection, map navigation, and SMART software usage.</li>
+        </ul>
+      </div>
+
+      <div class="service-row">
+        <h3>Bachelor of Forestry Science
+          <span class="role-meta">Universiti Putra Malaysia — Wildlife Conservation and Ecology, 2018 – 2022</span>
+        </h3>
+        <ul>
+          <li>CGPA 3.820. Foundation in ecology and conservation science underpinning current GIS and spatial monitoring work.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     5. CONTACT
+     EDIT: your email address and social links. The form below has
+     no backend attached — wire the "action" attribute up to your
+     form handler of choice (Formspree, Netlify Forms, your own API, etc).
+     ============================================================ -->
+<section id="contact">
+  <div class="wrap contact-grid">
+    <div class="contact-info">
+      <h2 style="margin-bottom:20px;">Let's talk</h2>
+      <p>
+        Whether it's a GIS/SMART workflow, a conservation data dashboard, or a
+        research collaboration on spatial monitoring — I'd like to hear about it.
+      </p>
+
+      <a href="mailto:ramzierosli14@gmail.com" class="contact-email">ramzierosli14@gmail.com</a>
+
+      <div class="social-list">
+        <!-- EDIT: add GitHub, ResearchGate, etc. here if you'd like more links -->
+        <a href="https://www.linkedin.com/in/ramzie-rosli" target="_blank" rel="noopener">LinkedIn <span class="arrow">&#8599;</span></a>
+      </div>
+    </div>
+
+    <form class="contact-form" id="contactForm" action="#" method="POST">
+      <div class="form-field">
+        <label for="name">NAME</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div class="form-field">
+        <label for="email">EMAIL</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-field">
+        <label for="message">MESSAGE</label>
+        <textarea id="message" name="message" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="border:none;">Send Message</button>
+      <p class="form-note" id="formNote">This form isn't wired to a backend yet — connect the "action" attribute to your form handler of choice.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="wrap">
+  <span>&copy; <span id="year"></span> Muhammad Ramzie Aliff Aiman Bin Rosli. All rights reserved.</span>
+  <span>Built with HTML, CSS &amp; JS</span>
+</footer>
+
+<script>
+/* ============================================================
+   Minimal vanilla JS — no build step required.
+   ============================================================ */
+
+// Footer year
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Nav background on scroll
+const nav = document.getElementById('siteNav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('is-scrolled', window.scrollY > 20);
+});
+
+// Mobile nav toggle
+const navToggle = document.getElementById('navToggle');
+const navMobile = document.getElementById('navMobile');
+navToggle.addEventListener('click', () => {
+  const isOpen = navMobile.classList.toggle('is-open');
+  navToggle.setAttribute('aria-expanded', isOpen);
+});
+// Close mobile nav after tapping a link
+navMobile.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    navMobile.classList.remove('is-open');
+    navToggle.setAttribute('aria-expanded', false);
+  });
+});
+
+// Basic client-side contact form handling (no backend wired up yet)
+const form = document.getElementById('contactForm');
+const formNote = document.getElementById('formNote');
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  formNote.textContent = 'Thanks — this is a placeholder confirmation. Connect a real form handler to actually receive messages.';
+  formNote.style.color = 'var(--accent)';
+});
+</script>
+
+</body>
+</html>
